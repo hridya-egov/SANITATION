@@ -1,7 +1,7 @@
 package org.egov.pqm.util;
 
-import org.springframework.stereotype.Component;
 import java.util.regex.Pattern;
+import org.springframework.stereotype.Component;
 
 
 @Component
@@ -78,6 +78,7 @@ public class Constants {
 
   public static final String UPDATE_RESULT = "UPDATE_RESULT";
   public static final String SUBMIT_SAMPLE="SUBMIT_SAMPLE";
+  public static final String SAVE_AS_DRAFT = "SAVE_AS_DRAFT";
   public static final String WFSTATUS_SUBMITTED = "SUBMITTED";
   public static final String WFSTATUS_PENDINGRESULTS = "PENDINGRESULTS";
 
@@ -99,4 +100,11 @@ public class Constants {
 
   public static final Pattern REGEX_METACHARACTER_PATTERN = Pattern.compile(
       "^[a-z0-9]+(-[a-z0-9]+)*$");
+
+  public static final String PQM_PDF_KEY = "pqm-adhoctest";
+  public static final Object SEARCH_MODULE_MDMS = "rainmaker-mdms";
+  public static final Object TQM_LOC_SEARCH_MODULE = "rainmaker-tqm";
+
+
+
 }

@@ -42,7 +42,7 @@ const RenderFormFields = ({data,...props}) => {
                             errorStyle={errors?.[populators.name]}
                             max={populators.max}
                             disable={disable}
-                            style={type === "date" ? { paddingRight: "3px" } : ""}
+                            style={type === "date" ? { paddingRight: "3px" } : populators?.style ? {...populators?.style} : {}}
                             maxlength={populators?.validation?.maxlength}
                             minlength={populators?.validation?.minlength}
                         />
@@ -298,11 +298,25 @@ const RenderFormFields = ({data,...props}) => {
                     <DateRangeNew
                       t={t}
                       values={formData?.[populators.name]?.range}
+                      // values={
+                      //   typeof formData?.[populators.name]?.range?.startDate === "string" ?
+                      //   {
+                      //   duration: formData?.[populators.name]?.range?.duration,
+                      //   endDate: new Date(
+                      //     formData?.[populators.name]?.range?.endDate
+                      //   ),
+                      //   startDate: new Date(
+                      //     formData?.[populators.name]?.range?.startDate
+                      //   ),
+                      //   title:
+                      //     formData?.[populators.name]?.range?.startDate?.title,
+                      // }: formData?.[populators.name]?.range}
                       name={populators.name}
                       onFilterChange={props.onChange}
                       inputRef={props.ref}
                       errorStyle={errors?.[populators.name]}
-                    />                  
+                      populators={populators}
+                    />
                   )}
                   rules={{ required: isMandatory, ...populators.validation }}
                   defaultValue={formData?.[populators.name]}
@@ -331,6 +345,8 @@ const RenderFormFields = ({data,...props}) => {
                     onBlur={props.onBlur}
                     control={control}
                     getValues={getValues}
+                    responseData={data}
+                    populators={populators}
                   />
                 )}
                 name={config?.key}

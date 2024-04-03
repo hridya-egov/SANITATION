@@ -42,7 +42,7 @@ const popupActionBarStyles = {
 const ActionModal = ({ t, action, tenantId, state, id, closeModal, submitAction, actionData, module,applicationDetails }) => {
   
   const mobileView = Digit.Utils.browser.isMobile() ? true : false;
-  const { data: dsoData, isLoading: isDsoLoading, isSuccess: isDsoSuccess, error: dsoError } = Digit.Hooks.fsm.useDsoSearch(tenantId, { limit: '-1', status: 'ACTIVE' });
+  const { data: dsoData, isLoading: isDsoLoading, isSuccess: isDsoSuccess, error: dsoError } = Digit.Hooks.fsm.useDsoSearch(tenantId, { limit: '-1', status: 'ACTIVE' }, {}, t);
   const { isLoading, isSuccess, isError, data: applicationData, error } = Digit.Hooks.fsm.useSearch(
     tenantId,
     { applicationNos: id },
@@ -59,7 +59,8 @@ const ActionModal = ({ t, action, tenantId, state, id, closeModal, submitAction,
         additionalDetails = parseTillObject(additionalDetails);
         return { ...details, additionalDetails };
       },
-    }
+    },
+    t
   );
   const client = useQueryClient();
   const stateCode = Digit.ULBService.getStateId();
@@ -139,8 +140,9 @@ const ActionModal = ({ t, action, tenantId, state, id, closeModal, submitAction,
     config: {
       enabled: individualIds?.length > 0 ? true : false,
       select: (data) => {
-        const result = data?.Individual?.map(ind => {return {givenName:ind?.name?.givenName,optionsKey:`${ind?.name?.givenName} / ${ind?.individualId}`,...ind}})?.filter(worker => worker?.userDetails?.roles?.some(role=> role?.code === "FSM_DRIVER") || worker?.userDetails?.roles?.some(role=> role?.code === "SANITATION_HELPER") )
-        setWorkers(result)
+        const result = data?.Individual?.map(ind => {return {givenName:ind?.name?.givenName,optionsKey:`${ind?.name?.givenName} / ${ind?.individualId}`,...ind}})?.filter(worker => worker?.userDetails?.roles?.some(role=> role?.code === "SANITATION_WORKER"))
+        const workersOutOfResult = result?.filter(worker => worker?.userDetails?.roles?.some(role=> role?.code === "SANITATION_HELPER"))
+        setWorkers(workersOutOfResult)
         const drivers = result?.filter(worker => worker?.userDetails?.roles?.some(role=> role?.code === "FSM_DRIVER"))
         setDrivers(drivers)
         return result
@@ -150,9 +152,11 @@ const ActionModal = ({ t, action, tenantId, state, id, closeModal, submitAction,
   const [showToast,setShowToast] = useState(null)
   const [dsoList, setDsoList] = useState([]);
   const [vehicleNoList, setVehicleNoList] = useState([]);
+  const [vehicleDriverList, setVehicleDriverList] = useState([]);
   const [config, setConfig] = useState({});
   const [dso, setDSO] = useState(null);
   const [vehicleNo, setVehicleNo] = useState(null);
+  const [vehicleDriver, setVehicleDriver] = useState(null);
   const [vehicleMenu, setVehicleMenu] = useState([]);
   const [vehicle, setVehicle] = useState(null);
 
@@ -245,6 +249,8 @@ const ActionModal = ({ t, action, tenantId, state, id, closeModal, submitAction,
       const [dso] = dsoData.filter((dso) => dso.id === applicationData.dsoId);
       const tempList = dso?.vehicles?.filter((vehicle) => vehicle.capacity == applicationData?.vehicleCapacity);
       const vehicleNoList = tempList?.sort((a,b) => (a?.registrationNumber > b?.registrationNumber ? 1 : -1 ));
+      const tempDriverList = dso?.drivers
+      setVehicleDriverList(tempDriverList)
       setVehicleNoList(vehicleNoList);
     }
   }, [isSuccess, isDsoSuccess]);
@@ -276,6 +282,10 @@ const ActionModal = ({ t, action, tenantId, state, id, closeModal, submitAction,
     setVehicleNo(vehicleNo);
   }
 
+  function selectVehicleDriver(driver) {
+    setVehicleDriver(driver)
+  }
+
   function selectVehicle(value) {
     setVehicle(value);
     setDefautValue({
@@ -305,12 +315,19 @@ const ActionModal = ({ t, action, tenantId, state, id, closeModal, submitAction,
     // Digit.SessionStorage.set("PGR_CREATE_IMAGES", ids);
   };
 
+  const tempSelectedWorkers = selectedWorkers?.map(obj => {
+    if (obj.userDetails && obj.userDetails.roles) {
+      obj.userDetails.roles = obj.userDetails.roles.filter(role => role.code !== "FSM_DRIVER");
+    }
+    return obj;
+  });
   function submit(data) {
     const workflow = { action: action };
 
     if (dso) applicationData.dsoId = dso.id;
     if (vehicleNo && action === "ACCEPT") applicationData.vehicleId = vehicleNo.id;
     if (vehicleNo && action === "DSO_ACCEPT") applicationData.vehicleId = vehicleNo.id;
+    if (vehicleDriver && action === "DSO_ACCEPT") applicationData.driverId = vehicleDriver.id;
     if (vehicle && action === "ASSIGN") applicationData.vehicleType = vehicle.code;
     if (data.date) applicationData.possibleServiceDate = new Date(`${data.date}`).getTime();
     if (data.desluged) applicationData.completedOn = new Date(data.desluged).getTime();
@@ -344,6 +361,18 @@ const ActionModal = ({ t, action, tenantId, state, id, closeModal, submitAction,
         })
       }
     };
+    //if action is send back we'll inactivate the assigned workers
+
+    if (action === "SENDBACK") {
+      if(applicationData?.workers?.length > 0) {
+        applicationData.workers = applicationData?.workers?.map(worker => {
+          return {
+            ...worker,
+            status:"INACTIVE"
+          }
+        })
+      }
+    };
 
     if (reassignReason) addCommentToWorkflow(reassignReason, workflow, data);
     if (rejectionReason) addCommentToWorkflow(rejectionReason, workflow, data);
@@ -360,17 +389,25 @@ const ActionModal = ({ t, action, tenantId, state, id, closeModal, submitAction,
         setTimeout(closeToast, 5000);
         return
       }
-      const workersList = [selectedDriver,...selectedWorkers]
+      const workersList = [selectedDriver,...tempSelectedWorkers]
       // workerList?.filter(worker => worker?.userDetails?.roles?.some(role=> role?.code === "FSM_DRIVER"))
-      const workerPayload = workersList?.map(worker=> {
+      const workerPayload = workersList?.map((worker,idx)=> {
         return {
           tenantId:worker?.tenantId,
           applicationId:applicationData?.id,
           individualId:worker?.id,
-          workerType:worker?.userDetails?.roles?.some(role=> role?.code === "FSM_DRIVER") ? "DRIVER":"HELPER",
+          // workerType:worker?.userDetails?.roles?.some(role=> role?.code === "FSM_DRIVER") ? "DRIVER":"HELPER",
+          workerType:idx===0 ? "DRIVER":"HELPER",
+          
           status:"ACTIVE"
         }
       })
+      //resettting the states
+      setSelectedDriver([])
+      setSelectedWorkers([])
+      setDrivers([])
+      setWorkers([])
+      refetchWorkers()
       submitAction({ fsm: {...applicationData,workers:workerPayload}, workflow });
       return
     }
@@ -410,6 +447,9 @@ const ActionModal = ({ t, action, tenantId, state, id, closeModal, submitAction,
             vehicleNo,
             vehicleNoList,
             selectVehicleNo,
+            vehicleDriverList,
+            vehicleDriver,
+            selectVehicleDriver,
             action,
             workers,
             selectedDriver,

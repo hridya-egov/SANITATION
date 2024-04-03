@@ -45,7 +45,7 @@ public class NotificationService {
 	/**
 	 * Creates and send the sms based on the fsmRequest
 	 * 
-	 * @param request The fsmRequest listenend on the kafka topic
+	 * @param testRequest The testRequest listenend on the kafka topic
 	 */
 	public void process(TestRequest testRequest,String topic) {
 
@@ -64,9 +64,10 @@ public class NotificationService {
 	 * 
 	 * Assumption - The fsmRequest received will always contain only one fsm.
 	 * 
-	 * @param request
+	 * @param testRequest
 	 * @return
 	 */
+	
 	public EventRequest getEvents(TestRequest testRequest,String topic) {
 
 		List<Event> events = new ArrayList<>();
@@ -76,11 +77,12 @@ public class NotificationService {
 
 			List<SMSRequest> smsRequests = new LinkedList<>();
 
-			enrichSMSRequest(test, smsRequests, requestInfo);
+			enrichSMSRequest(test, smsRequests, requestInfo, topic);
 
 			Set<String> mobileNumbers = smsRequests.stream().map(SMSRequest::getMobileNumber)
 					.collect(Collectors.toSet());
-
+			List<String> UUIDs = fetchUserUUIDs( requestInfo,
+					test.getTenantId());
 
 			Map<String, String> mobileNumberToMsg = smsRequests.stream()
 					.collect(Collectors.toMap(SMSRequest::getMobileNumber, SMSRequest::getMessage));
@@ -89,8 +91,8 @@ public class NotificationService {
 				List<String> toUsers = new ArrayList<>();
 
 				List<String> toRoles = new ArrayList<>();
-				toRoles.add("PQM_ADMIN");
-				Recepient recepient = Recepient.builder().toUsers(toUsers).toRoles(toRoles).build();
+				toUsers.addAll(UUIDs);
+				Recepient recepient = Recepient.builder().toUsers(toUsers).toRoles(null).build();
 				Action action = null;
 				List<ActionItem> items = new ArrayList<>();
 
@@ -126,21 +128,30 @@ public class NotificationService {
 
 	}
 
+
 	/**
 	 * Enriches the smsRequest with the customized messages
 	 * 
-	 * @param request     The fsmRequest from kafka topic
+	 * @param test     The test from kafka topic
 	 * @param smsRequests List of SMSRequets
 	 */
-	private void enrichSMSRequest(Test test, List<SMSRequest> smsRequests, RequestInfo requestInfo) {
+	private void enrichSMSRequest(Test test, List<SMSRequest> smsRequests, RequestInfo requestInfo, String topic) {
 		String tenantId = test.getTenantId();
 		String localizationMessages = notificationUtil.getLocalizationMessages(tenantId, requestInfo);
 		String messageCode = null;
 
-		if (test != null) {
-			String appCreatedMessage = "CREATE_NOTIFICATION";
+		String localizationCode = null;
 
-			String message = notificationUtil.getCustomizedMsg(test, localizationMessages, appCreatedMessage,
+		if(topic.equalsIgnoreCase(pqmAnomalyConfiguration.getNotAsPerBenchMark())) {
+			localizationCode = AnomalyFinderConstants.NOTIF_TEST_RESULT_NOT_AS_PER_BENCHMARK;
+		}
+		if(topic.equalsIgnoreCase(pqmAnomalyConfiguration.getTestNotSubmitted())) {
+			localizationCode = AnomalyFinderConstants.NOTIF_TEST_RESULT_NOT_SUBMITTED;
+		}
+
+		if (test != null) {
+
+			String message = notificationUtil.getCustomizedMsg(test, localizationMessages, localizationCode,
 					requestInfo);
 			Map<String, String> mobileNumberToOwner = new HashMap<>();
 			mobileNumberToOwner.put(requestInfo.getUserInfo().getMobileNumber(), requestInfo.getUserInfo().getName());
@@ -149,32 +160,34 @@ public class NotificationService {
 
 	}
 
-	private Map<String, String> fetchUserUUIDs(Set<String> mobileNumbers, RequestInfo requestInfo, String tenantId) {
+	private List<String> fetchUserUUIDs(RequestInfo requestInfo, String tenantId) {
 
-		Map<String, String> mapOfPhnoAndUUIDs = new HashMap<>();
+		List<String> returnUuids = new ArrayList<>();
 		StringBuilder uri = new StringBuilder();
 		uri.append(pqmAnomalyConfiguration.getUserHost()).append(pqmAnomalyConfiguration.getUserSearchEndpoint());
 		Map<String, Object> userSearchRequest = new HashMap<>();
 		userSearchRequest.put("RequestInfo", requestInfo);
 		userSearchRequest.put("tenantId", tenantId);
-//		userSearchRequest.put("userType", "CITIZEN");
-		for (String mobileNo : mobileNumbers) {
-			userSearchRequest.put("userName", requestInfo.getUserInfo().getUserName() );
+		List<String> roleCodesList = new ArrayList<>();
+		roleCodesList.add("PQM_ADMIN");
+
+		// Put the list into the map
+		userSearchRequest.put("roleCodes", roleCodesList);
+
 			try {
 				Object user = serviceRequestRepository.fetchResult(uri, userSearchRequest);
 				if (null != user) {
-					String uuid = JsonPath.read(user, "$.user[0].uuid");
-					mapOfPhnoAndUUIDs.put(mobileNo, uuid);
+					 List<String> uuids = JsonPath.read(user, "$.user[*].uuid");
+					 returnUuids.addAll(uuids);
 				} else {
-					log.error("Service returned null while fetching user for username - " + mobileNo);
+					log.error("Service returned null while fetching user for roleCodes - PQM_ADMIN");
 				}
 			} catch (Exception e) {
-				log.error("Exception while fetching user for username - " + mobileNo);
+				log.error("Exception while fetching user with roleodes - PQM_ADMIN" );
 				log.error("Exception trace: ", e);
-				continue;
 			}
-		}
-		return mapOfPhnoAndUUIDs;
+		
+		return returnUuids;
 	}
 
 }

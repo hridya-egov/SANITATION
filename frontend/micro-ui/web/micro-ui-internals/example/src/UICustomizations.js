@@ -28,12 +28,17 @@ const GetSlaCell = (value) => {
 export const UICustomizations = {
   FSMInboxConfig: {
     preProcess: (data) => {
+      //fetch everything from data.state instead of data.body
+      
+      const {locality:localityFromState,state:stateFromState} = data?.state?.filterForm || {}
+      const {applicationNos,mobileNumber} = data?.state?.searchForm || {}
       const userInfo = Digit.UserService.getUser();
       const userRoles = userInfo.info.roles.map((roleData) => roleData.code);
       //set tenantId
       const tenantId = Digit.ULBService.getCurrentTenantId();
       data.body.inbox.tenantId = tenantId;
       data.body.inbox.processSearchCriteria.tenantId = tenantId;
+      data.body.inbox.moduleSearchCriteria.tenantId = tenantId;
       // // deleting them for now(assignee-> need clarity from pintu,ward-> static for now,not implemented BE side)
       // const assignee = _.clone(data.body.inbox.moduleSearchCriteria.assignee);
       // delete data.body.inbox.moduleSearchCriteria.assignee;
@@ -46,8 +51,8 @@ export const UICustomizations = {
       // }
 
       // cloning locality and workflow states to format them
-      let locality = _.clone(data.body.inbox.moduleSearchCriteria.locality ? data.body.inbox.moduleSearchCriteria.locality : []);
-      let states = _.clone(data.body.inbox.moduleSearchCriteria.state ? data.body.inbox.moduleSearchCriteria.state : []);
+      let locality = _.clone(localityFromState?.length>0 ? localityFromState : []);
+      let states = _.clone(stateFromState ? stateFromState : []);
       delete data.body.inbox.moduleSearchCriteria.state;
 
       states = Object.keys(states)
@@ -56,6 +61,13 @@ export const UICustomizations = {
       locality = locality?.map((row) => row?.code);
       states.length > 0 ? (data.body.inbox.moduleSearchCriteria.status = states) : delete data.body.inbox.moduleSearchCriteria.status;
       locality.length > 0 ? (data.body.inbox.moduleSearchCriteria.locality = locality) : delete data.body.inbox.moduleSearchCriteria.locality;
+
+      if(applicationNos) {
+        data.body.inbox.moduleSearchCriteria.applicationNos = applicationNos
+      }
+      if(mobileNumber) {
+        data.body.inbox.moduleSearchCriteria.mobileNumber = mobileNumber
+      }
       return data;
     },
     additionalCustomizations: (row, key, column, value, t, searchResult) => {
@@ -189,6 +201,24 @@ export const UICustomizations = {
           enabled: true,
           select: (data) => {
             return data?.vendor;
+          },
+        },
+      };
+    },
+  },
+  VehicleAlertsConfig: {
+    vehicleListDropdown: () => {
+      const tenantId = Digit.ULBService.getCurrentTenantId();
+
+      return {
+        url: "/vehicle/v1/_search",
+        params: { tenantId: tenantId, sortBy: "registrationNumber", sortOrder: "ASC", status: "ACTIVE" },
+        body: {},
+        config: {
+          enabled: true,
+          select: (data) => {
+            const vehicleLists = [...data?.vehicle];
+            return vehicleLists;
           },
         },
       };

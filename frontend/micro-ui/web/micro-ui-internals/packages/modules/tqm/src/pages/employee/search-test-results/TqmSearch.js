@@ -1,4 +1,4 @@
-import React, {useMemo} from "react";
+import React, {useEffect, useMemo} from "react";
 import { useTranslation } from "react-i18next";
 import { Header,Loader } from "@egovernments/digit-ui-react-components";
 import {InboxSearchComposer} from '@egovernments/digit-ui-components';
@@ -6,8 +6,10 @@ import { tqmSearchConfigPlantOperator } from "./configPlantOperator";
 import { tqmSearchConfigUlbAdmin } from "./configUlbAdmin";
 const TqmSearch = () => {
     const { t } = useTranslation();
-
+    // Hook calling to enable scroll persistent 
+    const scrollPosition = Digit.Hooks.useScrollPersistence();
     const configModuleName = Digit.Utils.getConfigModuleName()
+    const isUlbAdminLoggedIn = Digit.Utils.tqm.isUlbAdminLoggedIn()
     const tenant = Digit.ULBService.getStateId();
     const { isLoading, data } = Digit.Hooks.useCustomMDMS(
         tenant,
@@ -50,24 +52,31 @@ const TqmSearch = () => {
         () => Digit.Utils.preProcessMDMSConfigInboxSearch(t, data, "sections.search.uiConfig.fields",{
           updateDependent : [
             {
-              key : "fromProposalDate",
-              value : [new Date().toISOString().split("T")[0]]
+              key : "dateRange",
+              value : new Date()
             },
-            {
-              key : "toProposalDate",
-              value : [new Date().toISOString().split("T")[0]]
-            }
+            // {
+            //   key : "toProposalDate",
+            //   value : [new Date().toISOString().split("T")[0]]
+            // }
           ]
         }
         ),[data]);
     
-
+    const tqmSearchSession = Digit.Hooks.useSessionStorage("TQM_SEARCH_SESSION", {})
+    useEffect(()=> {
+      return () => {
+        if(!location.pathname.includes("tqm") && isUlbAdminLoggedIn){
+          sessionStorage.removeItem("Digit.TQM_SEARCH_SESSION")
+        }
+      }
+    },[])
     if (isLoading) return <Loader />
     return (
         <React.Fragment>
         <Header className="works-header-search">{t(configs?.label)}</Header>
             <div className="inbox-search-wrapper">
-                <InboxSearchComposer configs={configs}></InboxSearchComposer>
+                <InboxSearchComposer configs={configs} scrollPosition={scrollPosition} browserSession={tqmSearchSession}></InboxSearchComposer>
             </div>
         </React.Fragment>
     )

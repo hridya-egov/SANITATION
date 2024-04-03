@@ -246,7 +246,31 @@ function AddWorkerRole({ t, jurisdiction, jurisdictions, setjurisdictions, handl
   }, [fnRoleSelected]);
 
   const selectFunctionalRole = (value) => {
-    setjurisdictions((pre) => pre.map((item) => (item.key === jurisdiction.key ? { ...item, fn_role: value } : item)));
+    setjurisdictions((pre) =>
+      pre.map((item) =>
+        item.key === jurisdiction.key
+          ? {
+              ...item,
+              fn_role: value,
+              roles: [
+                {
+                  code: "SANITATION_WORKER",
+                  name: "Sanitation Worker",
+                  isDefault: true,
+                },
+                {
+                  code: "CITIZEN",
+                  name: "Citizen",
+                  isDefault: true,
+                },
+              ],
+              sys_role: null,
+              emp_Type: null,
+              licenseNo: null,
+            }
+          : item
+      )
+    );
     setFnRoleSelected(value);
   };
 
@@ -373,7 +397,7 @@ function AddWorkerRole({ t, jurisdiction, jurisdictions, setjurisdictions, handl
 
             {/* system role here */}
             <LabelFieldPair>
-              <CardLabel className="card-label-smaller">{t("FSM_REGISTRY_LABEL_SYSTEM_ROLE")} *</CardLabel>
+              <CardLabel className="card-label-smaller">{t("FSM_REGISTRY_LABEL_SYSTEM_ROLE")}</CardLabel>
               <div className="form-field">
                 <MultiSelectDropdown
                   className="form-field"
@@ -381,10 +405,10 @@ function AddWorkerRole({ t, jurisdiction, jurisdictions, setjurisdictions, handl
                   defaultUnit="Selected"
                   selected={
                     jurisdiction?.roles
-                      ? jurisdiction?.roles?.filter((i) => i.code !== "SANITATION_WORKER" && i.code !== "CITIZEN")
+                      ? jurisdiction?.roles?.filter((i) => i?.code !== "SANITATION_WORKER" && i?.code !== "CITIZEN")
                       : jurisdiction?.sys_role
                       ? jurisdiction?.sys_role
-                      : defaultsysRole
+                      : []
                   }
                   options={sysRole}
                   onSelect={selectrole}

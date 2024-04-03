@@ -13,6 +13,7 @@
 @import "./components/ulbHomeCard.scss";
 @import "./components/InboxSearchComposer.scss";
 @import "./pages/employee/overridestyles.scss";
+@import "./pages/employee/inboxTag.scss";
 @import "./pages/employee/tqmHome.scss";
 @import "./pages/employee/tqmPopUp.scss";
 @import "./components/DetailsCard.scss";
@@ -21,6 +22,7 @@
 @import "./components/tqmHeader.scss";
 @import "./pages/employee/create.scss";
 @import "./pages/employee/registry.scss";
+@import "./components/applicationTable.scss";
 
 @media screen and (max-width: 768px) {
   .employeeCard.fsm {
@@ -36,6 +38,10 @@
     padding-left: 16px;
     padding-right: 16px;
     margin-top: 1rem;
+  }
+  .employeeCard.testwf {
+    margin: 0;
+    margin-right: 0.5rem;
   }
 }
 
@@ -299,9 +305,10 @@ input::-webkit-calendar-picker-indicator {
 @media (max-width: 670px) {
   .toast-success {
     width: 100%;
-    bottom: 0rem;
+    bottom: 57px;
     border-radius: 0;
     margin: 0;
+    z-index: 1000;
   }
 }
 
@@ -317,6 +324,8 @@ input::-webkit-calendar-picker-indicator {
 .employee-select-wrap {
   .options-card {
     top: 100%;
+    border-left-width: 0 !important;
+    border-right-width: 0 !important;
   }
 }
 .employee-select-wrap.fsm-registry-dropdown {
@@ -327,6 +336,7 @@ input::-webkit-calendar-picker-indicator {
 .inbox-search-links-container {
   .header {
     grid-template-columns: 12% 1fr;
+    grid-gap: 0.81rem;
   }
 }
 
@@ -338,3 +348,41 @@ input::-webkit-calendar-picker-indicator {
     }
   }
 }
+
+@media (min-width: 780px){
+  .employeeCard .card-caption {
+    font-size: 16px;
+    line-height: 32px;
+  }
+}
+
+/*
+PART OF VEHICLE TRACKING
+
+.sla-cell-success {
+  font-size: 1rem;
+  font-weight: 700;
+  padding: 0 24px;
+  border-radius: 11px;
+  background-color: rgba(0, 112, 60, 0.12);
+  color: #00703c !important;
+}
+
+.sla-cell-error {
+  font-size: 1rem;
+  font-weight: 700;
+  border-radius: 11px;
+  padding: 0 24px;
+  color: #d4351c !important;
+  background-color: rgb(212, 53, 28, 0.12);
+}
+
+.sla-cell-warning {
+  font-size: 1rem;
+  font-weight: 700;
+  padding: 0 24px;
+  border-radius: 11px;
+  color: #f47738 !important;
+  background-color: rgb(241, 143, 94, 0.12);
+}
+*/

@@ -100,7 +100,8 @@ const FSMRegistry = () => {
       driverIds: driverIds,
       status: "ACTIVE",
     },
-    { enabled: false }
+    { enabled: false },
+    t
   );
   
   const inboxTotalCount = dsoData?.TotalCount || dsoData?.totalCount ;
@@ -153,6 +154,8 @@ const FSMRegistry = () => {
         activeDrivers: dso.drivers?.filter((driver) => driver.status === "ACTIVE"),
         allVehicles: dso.vehicles,
         dsoDetails: dso,
+        // activeWorkers: dso.workers?.filter((worker) => worker.vendorWorkerStatus === "ACTIVE"),
+        workers: dso.workers,
         vehicles: dso.vehicles
           ?.filter((vehicle) => vehicle.status === "ACTIVE")
           ?.map((vehicle) => ({
@@ -202,6 +205,8 @@ const FSMRegistry = () => {
           let vendor = vendorData.find((ele) => ele.dsoDetails?.workers?.find((driver) => driver.individualId === data.id));
           if (vendor) {
             data.vendor = vendor.dsoDetails;
+          }else{
+            data.vendor = null
           }
           return data;
         });
