@@ -1,5 +1,7 @@
-import React, { useState, useEffect,useMemo } from "react";
-import { CardLabel, LabelFieldPair, Toast, TextInput, LinkButton, CardLabelError, MobileNumber, DatePicker, Loader, Header, ImageUploadHandler, UploadFile, MultiUploadWrapper } from "@egovernments/digit-ui-react-components";
+
+import React, { useState, useEffect } from "react";
+import { CardLabel,  LinkButton, CardLabelError, MobileNumber, DatePicker, Loader, Header, ImageUploadHandler, UploadFile, MultiUploadWrapper } from "@egovernments/digit-ui-react-components";
+import {Toast, TextInput, LabelFieldPair} from '@egovernments/digit-ui-components';
 import { useTranslation } from "react-i18next";
 import { useForm, Controller } from "react-hook-form";
 import _ from "lodash";
