@@ -258,7 +258,7 @@ const TestStandard = ({ control, errors, formData,setValue,getValues,onSelect, .
         <CardLabel className="card-label-smaller">{`${t(
           'TQM_PLANT_NAME'
         )} *`}</CardLabel>
-        <div className="field">
+        <div className="digit-field">
           <Controller
             control={control}
             name={`${formName}.plantCode`}
@@ -303,7 +303,7 @@ const TestStandard = ({ control, errors, formData,setValue,getValues,onSelect, .
         <CardLabel className="card-label-smaller">{`${t(
           'TQM_TREATMENT_PROCESS'
         )} *`}</CardLabel>
-        <div className="field">
+        <div className="digit-field">
           <Controller
             control={control}
             name={`${formName}.processCode`}
@@ -347,7 +347,7 @@ const TestStandard = ({ control, errors, formData,setValue,getValues,onSelect, .
         <CardLabel className="card-label-smaller">{`${t(
           'TQM_PROCESS_STAGE'
         )} *`}</CardLabel>
-        <div className="field">
+        <div className="digit-field">
           <Controller
             control={control}
             name={`${formName}.stageCode`}
@@ -392,7 +392,7 @@ const TestStandard = ({ control, errors, formData,setValue,getValues,onSelect, .
         <CardLabel className="card-label-smaller">{`${t(
           'TQM_OUTPUT_TYPE'
         )} *`}</CardLabel>
-        <div className="field">
+        <div className="digit-field">
           <Controller
             control={control}
             name={`${formName}.materialCode`}

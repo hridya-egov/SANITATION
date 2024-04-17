@@ -1,6 +1,6 @@
 {
   "name": "@egovernments/digit-ui-css",
-  "version": "1.2.154",
+  "version": "1.8.2-coreui.4 ",
   "license": "MIT",
   "main": "dist/index.css",
   "engines": {

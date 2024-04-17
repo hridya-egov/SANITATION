@@ -20,7 +20,6 @@ const QualityParameter = ({onSelect,formData,setValue,unregister,config,...props
     const { control} = useForm();
     const [showComponent, setShowComponent] = useState(false);
     const {plantCode,processCode,stageCode,materialCode} = formData?.TestStandard || {}
-    
     const [showToast, setShowToast] = useState(false);
     const tenant = Digit.ULBService.getStateId();
     const [allFieldsDefined, setallFieldsDefined] = useState(false);
@@ -125,7 +124,7 @@ const QualityParameter = ({onSelect,formData,setValue,unregister,config,...props
                                 <LabelFieldPair key={index}>
                                     <CardLabel style={CardLabelStyle}>{t(Digit.Utils.locale.getTransformedLocale(`${"PQM.TestStandard"}_${criteria}`))} {qualityCriteria?.length === 1 ? "*" : ""}</CardLabel>
                                     
-                                    <div className="field">
+                                    <div className="digit-field">
                                         <Controller
                                             control={control}
                                             name={`QualityParameter.${criteria}`}
@@ -156,7 +155,7 @@ const QualityParameter = ({onSelect,formData,setValue,unregister,config,...props
 
                     <LabelFieldPair>
                         <CardLabel style={CardLabelStyle}>{`${t("ES_TQM_TEST_PARAM_ATTACH_DOCUMENTS")}`}</CardLabel>
-                        <div className="field">
+                        <div className="digit-field">
                             <Controller
                                 defaultValue={quality?.document || []}
                                 name={`QualityParameter.document`}
